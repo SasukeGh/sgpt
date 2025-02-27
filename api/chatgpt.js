@@ -13,9 +13,11 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { prompt } = req.body;  // Use req.body directly
+        console.log('Request Body:', req.body);  // Log request body for debugging
+        const { prompt } = req.body;
 
         if (!prompt) {
+            console.log('No prompt provided');  // Log if prompt is missing
             return res.status(400).json({ error: 'Prompt is required' });
         }
 
@@ -32,6 +34,7 @@ export default async function handler(req, res) {
         });
 
         const data = await response.json();
+        console.log('OpenAI Response:', data);  // Log OpenAI's response
 
         if (!response.ok) {
             console.error('OpenAI API Error:', data);
