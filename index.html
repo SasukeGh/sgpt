@@ -27,8 +27,7 @@
         const historyDiv = document.getElementById('history');
         const responsesDiv = document.getElementById('responses');
 
-            
-            const updateHistory = () => {
+        const updateHistory = () => {
             const history = JSON.parse(localStorage.getItem('searchHistory')) || [];
             historyDiv.innerHTML = history.map(item => `<div>${item}</div>`).join('');
         };
@@ -41,22 +40,28 @@
 
             try {
                 const response = await fetch('/api/chatgpt', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ prompt })
-});
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
 
                 const data = await response.json();
-                const answer = data.choices[0].message.content;
+                const answer = data.answer || "No response received.";
+                
                 const history = JSON.parse(localStorage.getItem('searchHistory')) || [];
                 history.push(input);
                 localStorage.setItem('searchHistory', JSON.stringify(history));
                 updateHistory();
+
                 responsesDiv.innerHTML += `<div class='card'><strong>Q: ${input}</strong><p>A: ${answer}</p></div>`;
                 inputField.value = '';
             } catch (error) {
                 console.error('Error:', error);
-                alert('Failed to get response');
+                alert('Failed to get response: ' + error.message);
             } finally {
                 searchButton.disabled = false;
             }
