@@ -46,12 +46,6 @@
   body: JSON.stringify({ prompt })
 });
 
-                    body: JSON.stringify({
-                        model: 'gpt-3.5-turbo',
-                        messages: [{ role: 'user', content: prompt }]
-                    })
-                });
-
                 const data = await response.json();
                 const answer = data.choices[0].message.content;
                 const history = JSON.parse(localStorage.getItem('searchHistory')) || [];
