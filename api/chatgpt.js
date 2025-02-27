@@ -5,8 +5,8 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Use await req.json() instead of JSON.parse(req.body)
-        const { prompt } = await req.json(); 
+        // Parse the body as JSON
+        const { prompt } = JSON.parse(req.body); 
 
         if (!prompt) {
             return res.status(400).json({ error: 'Prompt is required' });
