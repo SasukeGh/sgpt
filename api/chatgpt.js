@@ -47,3 +47,6 @@ export default async function handler(req, res) {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 }
+console.log('Prompt:', prompt);
+console.log('API Key:', process.env.OPENAI_API_KEY);
+
