@@ -1,3 +1,11 @@
+export const config = {
+    api: {
+        bodyParser: {
+            sizeLimit: '1mb',
+        },
+    },
+};
+
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         res.setHeader('Allow', ['POST']);
@@ -5,8 +13,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Parse the body as JSON
-        const { prompt } = JSON.parse(req.body); 
+        const { prompt } = req.body;  // Use req.body directly
 
         if (!prompt) {
             return res.status(400).json({ error: 'Prompt is required' });
