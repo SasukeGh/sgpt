@@ -1,74 +1,39 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatGPT Search</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: auto; }
-        input, button { padding: 10px; border-radius: 20px; border: 1px solid #ccc; width: 100%; margin: 5px 0; }
-        button { background-color: #4CAF50; color: white; cursor: pointer; }
-        button:disabled { background-color: #ccc; cursor: not-allowed; }
-        .card { border-radius: 20px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); padding: 15px; margin: 10px 0; }
-        .history, .response { background: #f9f9f9; padding: 10px; border-radius: 20px; margin: 10px 0; }
-    </style>
-</head>
-<body>
-    <h1>ChatGPT Search</h1>
-    <input type="text" id="input" placeholder="Type your search...">
-    <button id="searchButton">Search</button>
-    <h2>Search History</h2>
-    <div id="history" class="history"></div>
-    <h2>Responses</h2>
-    <div id="responses"></div>
-    <script>
-        const inputField = document.getElementById('input');
-        const searchButton = document.getElementById('searchButton');
-        const historyDiv = document.getElementById('history');
-        const responsesDiv = document.getElementById('responses');
+export default async function handler(req, res) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    const { prompt } = req.body;
 
-        const updateHistory = () => {
-            const history = JSON.parse(localStorage.getItem('searchHistory')) || [];
-            historyDiv.innerHTML = history.map(item => `<div>${item}</div>`).join('');
-        };
+    if (!apiKey) {
+        return res.status(500).json({ error: 'Missing OpenAI API key' });
+    }
 
-        const handleSearch = async () => {
-            const input = inputField.value.trim();
-            if (!input) return;
-            searchButton.disabled = true;
-            const prompt = `search prompt== ${input}`;
+    if (!prompt) {
+        return res.status(400).json({ error: 'No prompt provided' });
+    }
 
-            try {
-                const response = await fetch('/api/chatgpt', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt })
-                });
+    try {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+                model: 'gpt-3.5-turbo',
+                messages: [{ role: 'user', content: prompt }]
+            }),
+        });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
+        if (!response.ok) {
+            const errorDetails = await response.json();
+            return res.status(response.status).json({ error: errorDetails });
+        }
 
-                const data = await response.json();
-                const answer = data.answer || "No response received.";
-                
-                const history = JSON.parse(localStorage.getItem('searchHistory')) || [];
-                history.push(input);
-                localStorage.setItem('searchHistory', JSON.stringify(history));
-                updateHistory();
+        const data = await response.json();
+        const answer = data.choices[0]?.message?.content || 'No answer received from the model.';
+        res.status(200).json({ answer });
 
-                responsesDiv.innerHTML += `<div class='card'><strong>Q: ${input}</strong><p>A: ${answer}</p></div>`;
-                inputField.value = '';
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Failed to get response: ' + error.message);
-            } finally {
-                searchButton.disabled = false;
-            }
-        };
-
-        searchButton.addEventListener('click', handleSearch);
-        updateHistory();
-    </script>
-</body>
-</html>
+    } catch (error) {
+        console.error('Request failed:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
